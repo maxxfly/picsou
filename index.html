@@ -1,0 +1,36 @@
+<html>
+<head>
+  <style>
+
+	* { font-family: Arial; }
+	BODY { background-color: yellow; }
+	IFRAME { width: 700px; height: 100px; border: 2px solid black; }
+
+  </style>
+</head>
+<body>
+<H1>TEST SERVEUR MEDIA</H1>
+
+<h2>Original</h2>
+<img src="http://localhost:8001/1b35c3c2da01e3054539e0182b4cd15abb4435ee.jpg" />
+
+<h2>Resize</h2>
+<img src="http://localhost:8001/r/1b35c3c2da01e3054539e0182b4cd15abb4435ee-150-150.jpg" />
+
+<h2>Croppé</h2>
+<img src="http://localhost:8001/c/1b35c3c2da01e3054539e0182b4cd15abb4435ee-150-150.jpg" />
+
+<h2>Transparente</h2>
+<img src="http://localhost:8001/1b35c3c2da01e3054539e0182b4cd15abb4435ee.png" />
+
+<h2>Transparente resize</h2>
+<img src="http://localhost:8001/r/1b35c3c2da01e3054539e0182b4cd15abb4435ee-150-150.png" />
+
+<h2>Base64 du JPG</h2>
+<iframe src="http://localhost:8001/1b35c3c2da01e3054539e0182b4cd15abb4435ee.txt"></iframe>
+
+<h2>Base64 du JPG resizé</h2>
+<iframe src="http://localhost:8001/r/1b35c3c2da01e3054539e0182b4cd15abb4435ee-150-150.txt"></iframe>
+
+</body>
+</html>

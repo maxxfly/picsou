@@ -1,0 +1,131 @@
+server
+{
+  log_subrequest on;
+  log_not_found on;
+
+  listen 8001;
+
+  location @fallback_php {
+    internal;
+    fastcgi_param SCRIPT_FILENAME /var/www/picsou/php/index.php;
+    fastcgi_index index.php;
+    fastcgi_param  REQUEST_METHOD   $request_method;
+    fastcgi_param  CONTENT_TYPE     $content_type;
+    fastcgi_param  CONTENT_LENGTH   $content_length;
+    fastcgi_param URI $uri;
+    fastcgi_param REQUEST_URI $request_uri;
+    fastcgi_intercept_errors        on;
+    fastcgi_ignore_client_abort     off;
+    fastcgi_connect_timeout 60;
+    fastcgi_send_timeout 180;
+    fastcgi_read_timeout 180;
+    fastcgi_buffer_size 128k;
+    fastcgi_buffers 4 256k;
+    fastcgi_busy_buffers_size 256k;
+    fastcgi_temp_file_write_size 256k;
+    fastcgi_param QUERY_STRING $query_string;
+    fastcgi_pass 127.0.0.1:9000;
+  }
+
+
+  location ~ .php$ {
+    expires 3d;
+    set $memcached_key "$request_uri";
+    memcached_pass localhost:11211;
+    memcached_buffer_size 8k;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_redirect off;
+    error_page         404 502 = @fallback_php;
+  }
+
+  location ~ favicon.ico {
+    root /var/www/picsou;
+    expires 3d;
+  }
+
+  location /
+  {
+   proxy_pass http://192.168.0.220/picsou/images/full/;
+
+   proxy_set_header       Host $host;
+   proxy_cache            STATIC;
+   proxy_cache_valid      200  1d;
+   proxy_cache_use_stale  error timeout invalid_header updating
+                                   http_500 http_502 http_503 http_504;
+   expires 3d;
+  }
+
+
+  location ~ .png$ {
+    expires 3d;
+    rewrite ^.*$ index.php;
+  }
+
+  location ~ .txt$ {
+    expires 3d;
+    rewrite ^.*$ index.php;
+  }
+
+  location /rwb
+  {
+    expires 3d;
+    rewrite ^.*$ index.php;
+  }
+
+  location /trwb
+  {
+    expires 3d;
+    rewrite ^.*$ index.php;
+  }
+
+  location /r
+  {
+    if ($request_filename ~ [a-zA-Z0-9]+-([0-9]+)-([0-9]+).jpg) {
+      set $img_width $1;
+      set $img_height $2;
+      rewrite ^(.*)-[0-9]+-[0-9]+.jpg$ $1.jpg ;
+    }
+
+    proxy_pass http://192.168.0.220/picsou/images/full;
+    proxy_set_header       Host $host;
+    proxy_cache            STATIC;
+    proxy_cache_valid      200  1d;
+    proxy_cache_use_stale  error timeout invalid_header updating
+                           http_500 http_502 http_503 http_504;
+
+    expires 3d;
+    image_filter resize $img_width $img_height;
+    image_filter_buffer 500M;
+    image_filter_jpeg_quality 87;
+  }
+
+  location /c
+  {
+    if ($request_filename ~ [a-zA-Z0-9]+-([0-9]+)-([0-9]+).jpg) {
+      set $img_width $1;
+      set $img_height $2;
+      rewrite ^(.*)-[0-9]+-[0-9]+.jpg$ $1.jpg ;
+    }
+
+    proxy_pass http://192.168.0.220/picsou/images/full;
+
+    proxy_set_header       Host $host;
+    proxy_cache            STATIC;
+    proxy_cache_valid      200  1d;
+    proxy_cache_use_stale  error timeout invalid_header updating
+                                 http_500 http_502 http_503 http_504;
+
+    expires 3d;
+
+    image_filter crop $img_width $img_height;
+    image_filter_buffer 500M;
+    image_filter_jpeg_quality 87;
+  }
+
+}
+
+upstream backend_php {
+        server 127.0.0.1:9000;
+}
